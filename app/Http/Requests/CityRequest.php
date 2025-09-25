@@ -14,7 +14,7 @@ class CityRequest extends FormRequest
     public function rules()
     {
         return [
-            'city' => 'required|string|max:255|unique:cities,city',
+            'city' => 'required|string|max:50|unique:cities,city',
         ];
     }
 }

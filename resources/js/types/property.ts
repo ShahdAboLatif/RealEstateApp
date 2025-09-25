@@ -1,41 +1,42 @@
 // resources/js/types/property.ts
 
+export interface City {
+    id: number;
+    city: string;
+    created_at?: string;
+    updated_at?: string;
+}
+
 export interface Property {
     id: number;
-    property_name: string;
-    insurance_company_name: string;
-    amount: number;
-    policy_number: string;
-    effective_date: string;
-    expiration_date: string;
-    status: 'Active' | 'Expired';
-    formatted_amount: string;
-    is_expired: boolean;
-    is_active: boolean;
+    city_id: number;
+    name: string;
+    archived: boolean;
     created_at: string;
     updated_at: string;
+    city?: City; // Relationship data when loaded
+
+    // Calculated properties from your model
+    total_units?: number;
+    vacant_units?: number;
+    occupied_units?: number;
+    listed_units?: number;
 }
 
 export interface PropertyFormData {
-    property_name: string;
-    insurance_company_name: string;
-    amount: string;
-    policy_number: string;
-    effective_date: string;
-    expiration_date: string;
+    city_id: number | string;
+    name: string;
+    archived?: boolean;
 }
 
 export interface PropertyFilters {
     property_name?: string;
-    insurance_company_name?: string;
-    policy_number?: string;
-    status?: 'Active' | 'Expired';
 }
 
 export interface PropertyStatistics {
     total: number;
-    active: number;
-    expired: number;
+    total_with_archived: number;
+    archived: number;
 }
 
 export interface PaginatedProperties {
@@ -51,4 +52,19 @@ export interface PaginatedProperties {
         label: string;
         active: boolean;
     }>;
+}
+
+export interface PropertyCreateProps {
+    cities: City[];
+}
+
+export interface PropertyEditProps {
+    property: Property;
+    cities: City[];
+}
+
+export interface PropertyIndexProps {
+    properties: PaginatedProperties;
+    statistics: PropertyStatistics;
+    filters: PropertyFilters;
 }

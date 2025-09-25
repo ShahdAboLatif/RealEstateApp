@@ -12,7 +12,8 @@ class Cities extends Model
     protected $table = 'cities';
 
     protected $fillable = [
-        'name',
+        'city',
+
     ];
 
     // Relationships

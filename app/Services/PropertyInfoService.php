@@ -1,100 +1,69 @@
 <?php
-// app/Services/PropertyInfoService.php
 
 namespace App\Services;
 
 use App\Models\PropertyInfo;
+use App\Models\Cities;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
-use Carbon\Carbon;
 
 class PropertyInfoService
 {
     public function getAllPaginated(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
-        $query = PropertyInfo::query();
+        $query = PropertyInfo::with('city');
 
         // Apply filters
         if (!empty($filters['property_name'])) {
-            $query->where('property_name', 'like', '%' . $filters['property_name'] . '%');
+            $query->where('name', 'like', '%' . $filters['property_name'] . '%');
         }
 
-        if (!empty($filters['insurance_company_name'])) {
-            $query->where('insurance_company_name', 'like', '%' . $filters['insurance_company_name'] . '%');
-        }
-
-        if (!empty($filters['policy_number'])) {
-            $query->where('policy_number', 'like', '%' . $filters['policy_number'] . '%');
-        }
-
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        return $query->orderBy('expiration_date', 'asc')->paginate($perPage);
+        return $query->orderBy('name', 'asc')->paginate($perPage);
     }
 
     public function create(array $data): PropertyInfo
     {
-        $property = PropertyInfo::create($data);
-        // Set initial status based on expiration date
-        $property->updateStatus();
-        return $property;
+        $data['archived'] = false; // Ensure new properties are not archived
+        return PropertyInfo::create($data);
     }
 
     public function findById(int $id): PropertyInfo
     {
-        return PropertyInfo::findOrFail($id);
+        return PropertyInfo::withArchived()->with('city')->findOrFail($id);
     }
 
     public function update(PropertyInfo $propertyInfo, array $data): PropertyInfo
     {
         $propertyInfo->update($data);
-        // Update status after updating the property
-        $propertyInfo->updateStatus();
         return $propertyInfo->fresh();
-    }
-
-    public function delete(PropertyInfo $propertyInfo): bool
-    {
-        return $propertyInfo->delete();
-    }
-
-    public function getExpired(): Collection
-    {
-        return PropertyInfo::where('status', 'Expired')
-            ->orderBy('expiration_date', 'asc')
-            ->get();
     }
 
     public function getStatistics(): array
     {
-        $total = PropertyInfo::count();
-        $expired = PropertyInfo::where('status', 'Expired')->count();
-        $active = PropertyInfo::where('status', 'Active')->count();
+        $total = PropertyInfo::count(); // Only active (non-archived)
+        $totalWithArchived = PropertyInfo::withArchived()->count();
+        $archived = PropertyInfo::onlyArchived()->count();
 
         return [
             'total' => $total,
-            'expired' => $expired,
-            'active' => $active,
+            'total_with_archived' => $totalWithArchived,
+            'archived' => $archived,
         ];
     }
 
-    public function updateAllStatuses(): void
+    public function getCities(): Collection
     {
-        $properties = PropertyInfo::all();
-
-        foreach ($properties as $property) {
-            $today = Carbon::now()->startOfDay();
-            $expirationDate = Carbon::parse($property->getAttributes()['expiration_date'])->startOfDay();
-
-            // Expired when today is >= expiration date
-            $newStatus = $today->gte($expirationDate) ? 'Expired' : 'Active';
-
-            if ($property->status !== $newStatus) {
-                $property->status = $newStatus;
-                $property->save();
-            }
-        }
+        return Cities::orderBy('city')->get();
     }
+
+    public function getArchived(): Collection
+    {
+        return PropertyInfo::onlyArchived()->with('city')->orderBy('name')->get();
+    }
+
+    public function getAllWithArchived(): Collection
+    {
+        return PropertyInfo::withArchived()->with('city')->orderBy('name')->get();
+    }
+
 }

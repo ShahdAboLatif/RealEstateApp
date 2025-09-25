@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('city_id');
             $table->string('name');
+            $table->boolean('archived')->default(0)->nullable();
             $table->timestamps();
 
             // Foreign key constraint

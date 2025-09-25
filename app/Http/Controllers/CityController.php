@@ -32,9 +32,5 @@ class CityController extends Controller
         return redirect()->route('cities.index')->with('success', 'City created successfully.');
     }
 
-    public function destroy(Cities $city)
-    {
-        $this->service->delete($city);
-        return redirect()->route('cities.index')->with('success', 'City deleted successfully.');
-    }
+    
 }

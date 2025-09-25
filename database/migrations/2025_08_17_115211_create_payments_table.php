@@ -14,7 +14,7 @@ return new class extends Migration
             $table->date('date');
             $table->decimal('owes', 10, 2);
             $table->decimal('paid', 10, 2);
-            
+
             $table->text('notes')->nullable();
             $table->decimal('reversed_payments', 10, 2)->nullable();
             $table->enum('permanent', ['yes', 'no']);
@@ -27,7 +27,6 @@ return new class extends Migration
             // Add indexes for better query performance
             $table->index('unit_id');
             $table->index('date');
-            $table->index('status');
         });
     }
 

@@ -118,15 +118,15 @@ const Index = ({ cities }: Props) => {
                       <TableHeader>
                         <TableRow className="border-border">
                           <TableHead className="text-muted-foreground">City</TableHead>
-                          {hasPermission('cities.destroy') && (
-                          <TableHead className="text-muted-foreground">Actions</TableHead>)}
+                          {/* {hasPermission('cities.destroy') && (
+                          <TableHead className="text-muted-foreground">Actions</TableHead>)} */}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {cities.map((city) => (
                           <TableRow key={city.id} className="hover:bg-muted/50 border-border">
                             <TableCell className="font-medium text-foreground">{city.city}</TableCell>
-                            {hasPermission('cities.destroy') && (
+                            {/* {hasPermission('cities.destroy') && (
                             <TableCell>
                               <Button
                                 variant="outline"
@@ -136,7 +136,7 @@ const Index = ({ cities }: Props) => {
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
-                            </TableCell>)}
+                            </TableCell>)} */}
                           </TableRow>
                         ))}
                       </TableBody>

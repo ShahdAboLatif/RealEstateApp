@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/PropertyInfoController.php
 
 namespace App\Http\Controllers;
 
@@ -22,17 +21,12 @@ class PropertyInfoController extends Controller
         $this->middleware('permission:properties.show')->only('show');
         $this->middleware('permission:properties.edit')->only('edit');
         $this->middleware('permission:properties.update')->only('update');
-        $this->middleware('permission:properties.destroy')->only('destroy');
-
     }
 
     public function index(Request $request): Response
     {
         $perPage = $request->get('per_page', 15);
-        $filters = $request->only(['property_name', 'insurance_company_name', 'policy_number', 'status']);
-
-        // Update all property statuses before displaying
-        $this->propertyInfoService->updateAllStatuses();
+        $filters = $request->only(['property_name']);
 
         $properties = $this->propertyInfoService->getAllPaginated($perPage, $filters);
         $statistics = $this->propertyInfoService->getStatistics();
@@ -46,7 +40,11 @@ class PropertyInfoController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Properties/Create');
+        $cities = $this->propertyInfoService->getCities();
+
+        return Inertia::render('Properties/Create', [
+            'cities' => $cities,
+        ]);
     }
 
     public function store(StorePropertyInfoRequest $request): RedirectResponse
@@ -75,9 +73,11 @@ class PropertyInfoController extends Controller
     public function edit(int $id): Response
     {
         $property = $this->propertyInfoService->findById($id);
+        $cities = $this->propertyInfoService->getCities();
 
         return Inertia::render('Properties/Edit', [
             'property' => $property,
+            'cities' => $cities,
         ]);
     }
 
@@ -87,8 +87,10 @@ class PropertyInfoController extends Controller
             $property = $this->propertyInfoService->findById($id);
             $this->propertyInfoService->update($property, $request->validated());
 
+            $message = $request->input('archived') ? 'Property archived successfully' : 'Property updated successfully';
+
             return redirect()->route('properties-info.index')
-                ->with('success', 'Property updated successfully');
+                ->with('success', $message);
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Failed to update property: ' . $e->getMessage())
@@ -96,43 +98,12 @@ class PropertyInfoController extends Controller
         }
     }
 
-    public function destroy(int $id): RedirectResponse
-    {
-        try {
-            $property = $this->propertyInfoService->findById($id);
-            $this->propertyInfoService->delete($property);
+    // public function dashboard(): Response
+    // {
+    //     $statistics = $this->propertyInfoService->getStatistics();
 
-            return redirect()->route('properties-info.index')
-                ->with('success', 'Property deleted successfully');
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Failed to delete property: ' . $e->getMessage());
-        }
-    }
-
-    public function dashboard(): Response
-    {
-        // Update all statuses before showing dashboard
-        $this->propertyInfoService->updateAllStatuses();
-
-        $statistics = $this->propertyInfoService->getStatistics();
-        $expired = $this->propertyInfoService->getExpired();
-
-        return Inertia::render('Properties/Dashboard', [
-            'statistics' => $statistics,
-            'expired' => $expired,
-        ]);
-    }
-
-    public function expired(): Response
-    {
-        // Update all statuses before showing expired properties
-        $this->propertyInfoService->updateAllStatuses();
-
-        $properties = $this->propertyInfoService->getExpired();
-
-        return Inertia::render('Properties/Expired', [
-            'properties' => $properties,
-        ]);
-    }
+    //     return Inertia::render('Properties/Dashboard', [
+    //         'statistics' => $statistics,
+    //     ]);
+    // }
 }
