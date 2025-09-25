@@ -1,5 +1,4 @@
 <?php
-// app/Models/Unit.php
 
 namespace App\Models;
 
@@ -11,91 +10,100 @@ class Unit extends Model
     use HasFactory;
 
     protected $fillable = [
-        'city',
-        'property',
-        'unit_name',
-        'tenants',
-        'lease_start',
-        'lease_end',
+        'property_id',
+        'name',
+        'street_address_line',
         'count_beds',
         'count_baths',
-        'lease_status',
         'monthly_rent',
         'recurring_transaction',
         'utility_status',
         'account_number',
-        'insurance',
-        'insurance_expiration_date',
         'vacant',
         'listed',
-        'total_applications',
+        'archived',
     ];
 
     protected $casts = [
-        'lease_start' => 'date',
-        'lease_end' => 'date',
-        'insurance_expiration_date' => 'date',
         'monthly_rent' => 'decimal:2',
-        'count_beds' => 'integer',
-        'count_baths' => 'integer',
-        'total_applications' => 'integer',
+        'count_beds' => 'decimal:2',
+        'count_baths' => 'decimal:2',
+        'vacant' => 'boolean',
+        'listed' => 'boolean',
+        'archived' => 'boolean',
     ];
 
-    // Relationship with applications
+    // Relationships
+    public function property()
+    {
+        return $this->belongsTo(PropertyInfo::class, 'property_id');
+    }
+
+    public function tenants()
+    {
+        return $this->hasMany(Tenant::class, 'unit_id');
+    }
+
     public function applications()
     {
-        return $this->hasMany(Application::class, 'unit', 'unit_name');
+        return $this->hasMany(Application::class, 'unit_id');
     }
 
-    // Boot method to handle calculated fields
-    protected static function boot()
+    public function moveIns()
     {
-        parent::boot();
-
-        static::saving(function ($unit) {
-            $unit->calculateFields();
-        });
+        return $this->hasMany(MoveIn::class, 'unit_id');
     }
 
-    public function calculateFields()
+    public function moveOuts()
     {
-        // Calculate Vacant
-        $this->vacant = empty($this->tenants) ? 'Yes' : 'No';
-
-        // Calculate Listed
-        $this->listed = $this->vacant === 'Yes' ? 'Yes' : 'No';
-
-        // Calculate Total Applications
-        if ($this->listed === 'Yes') {
-            $this->total_applications = Application::where('unit', $this->unit_name)->count();
-        } else {
-            $this->total_applications = 0;
-        }
+        return $this->hasMany(MoveOut::class, 'unit_id');
     }
 
-    // Static method to update all units' application counts
-    public static function updateAllApplicationCounts()
+    public function noticeAndEvictions()
     {
-        $units = static::all();
-        foreach ($units as $unit) {
-            $unit->calculateFields();
-            $unit->saveQuietly(); // Use saveQuietly to avoid triggering boot again
-        }
+        return $this->hasMany(NoticeAndEviction::class, 'unit_id');
     }
 
-    // Method to update application count for specific unit
-    public static function updateApplicationCountForUnit($unitName)
+    public function vendorTaskTrackers()
     {
-        $unit = static::where('unit_name', $unitName)->first();
-        if ($unit) {
-            $unit->calculateFields();
-            $unit->saveQuietly();
-        }
+        return $this->hasMany(VendorTaskTracker::class, 'unit_id');
     }
 
-    // Accessor for formatted monthly rent
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'unit_id');
+    }
+
+    public function paymentPlans()
+    {
+        return $this->hasMany(PaymentPlan::class, 'unit_id');
+    }
+
+    public function offersAndRenewals()
+    {
+        return $this->hasMany(OffersAndRenewal::class, 'unit_id');
+    }
+
+    // Calculated properties
+    public function getTotalApplicationsAttribute(): int
+    {
+        return $this->applications()->where('archived',false)->count();
+    }
+
+    public function getCurrentTenantAttribute()
+    {
+        return $this->tenants()->where('archived', false)->first();
+    }
+
     public function getFormattedMonthlyRentAttribute(): string
     {
-        return $this->monthly_rent ? '$' . number_format($this->monthly_rent, 2) : 'N/A';
+        return $this->monthly_rent
+        ? '$' . number_format((float) $this->monthly_rent, 2)
+        : 'N/A';
+    }
+
+    public function getFullAddressAttribute(): string
+    {
+        return $this->street_address_line . ', ' . $this->property->city->name;
     }
 }

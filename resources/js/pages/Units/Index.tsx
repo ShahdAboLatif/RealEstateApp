@@ -407,7 +407,7 @@ export default function Index({ auth, units, statistics, filters }: Props) {
                             {units.last_page > 1 && (
                                 <div className="mt-6 flex justify-center">
                                     <nav className="flex space-x-2">
-                                        {units.links.map((link, index) => (
+                                        {units.links && units.links.length > 0 && units.links.map((link, index) => (
                                             <button
                                                 key={index}
                                                 onClick={() => link.url && router.get(link.url)}

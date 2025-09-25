@@ -1,5 +1,4 @@
 <?php
-// database/migrations/xxxx_xx_xx_create_units_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -11,25 +10,27 @@ return new class extends Migration
     {
         Schema::create('units', function (Blueprint $table) {
             $table->id();
-            $table->string('city');
-            $table->string('property');
-            $table->string('unit_name');
-            $table->string('tenants')->nullable();
-            $table->date('lease_start')->nullable();
-            $table->date('lease_end')->nullable();
-            $table->integer('count_beds')->nullable();
-            $table->integer('count_baths')->nullable();
-            $table->string('lease_status')->nullable();
+            $table->unsignedBigInteger('property_id');
+            $table->string('name');
+            $table->string('street_address_line')->nullable();
+            $table->decimal('count_beds', 8, 2)->nullable();
+            $table->decimal('count_baths', 8, 2)->nullable();
             $table->decimal('monthly_rent', 15, 2)->nullable();
-            $table->string('recurring_transaction')->nullable();
-            $table->string('utility_status')->nullable();
+            $table->text('recurring_transaction')->nullable();
+            $table->enum('utility_status', ['under our name', 'under owner name', 'under tenant name'])->nullable();
             $table->string('account_number')->nullable();
-            $table->enum('insurance', ['Yes', 'No'])->nullable();
-            $table->date('insurance_expiration_date')->nullable();
-            $table->string('vacant'); // Calculated field
-            $table->string('listed'); // Calculated field
-            $table->integer('total_applications')->default(0); // Calculated field
+            $table->boolean('vacant')->nullable();
+            $table->boolean('listed')->nullable();
+            $table->boolean('archived')->default(0)->nullable();
             $table->timestamps();
+
+            // Foreign key constraint
+            $table->foreign('property_id')->references('id')->on('properties')->onUpdate('no action')->onDelete('no action');
+
+            // Add indexes for better query performance
+            $table->index('property_id');
+            $table->index('vacant');
+            $table->index('listed');
         });
     }
 

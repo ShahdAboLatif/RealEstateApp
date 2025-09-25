@@ -10,21 +10,24 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('unit_id');
             $table->date('date');
-            $table->string('city');
-            $table->string('unit_name');
             $table->decimal('owes', 10, 2);
-            $table->decimal('paid', 10, 2)->nullable();
-            $table->decimal('left_to_pay', 10, 2)->nullable();
-            $table->string('status')->nullable();
+            $table->decimal('paid', 10, 2);
+            
             $table->text('notes')->nullable();
-            $table->string('reversed_payments')->nullable();
-            $table->enum('permanent', ['Yes', 'No']);
+            $table->decimal('reversed_payments', 10, 2)->nullable();
+            $table->enum('permanent', ['yes', 'no']);
+            $table->boolean('archived')->default(0)->nullable();
             $table->timestamps();
 
+            // Foreign key constraint
+            $table->foreign('unit_id')->references('id')->on('units')->onUpdate('no action')->onDelete('no action');
+
             // Add indexes for better query performance
-            $table->index(['city', 'unit_name']);
+            $table->index('unit_id');
             $table->index('date');
+            $table->index('status');
         });
     }
 

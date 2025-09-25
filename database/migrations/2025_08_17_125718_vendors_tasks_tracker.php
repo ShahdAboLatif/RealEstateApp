@@ -10,22 +10,30 @@ return new class extends Migration
     {
         Schema::create('vendors_tasks_tracker', function (Blueprint $table) {
             $table->id();
-            $table->string('city');
+            $table->unsignedBigInteger('city_id');
+            $table->unsignedBigInteger('vendor_id');
+            $table->unsignedBigInteger('unit_id');
             $table->date('task_submission_date');
-            $table->string('vendor_name');
-            $table->string('unit_name');
-            $table->text('assigned_tasks');
+            $table->text('assigned_tasks')->nullable();
             $table->date('any_scheduled_visits')->nullable();
             $table->text('notes')->nullable();
             $table->date('task_ending_date')->nullable();
-            $table->string('status')->nullable();
-            $table->enum('urgent', ['Yes', 'No']);
+            $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled'])->nullable();
+            $table->enum('urgent', ['yes', 'no'])->nullable();
+            $table->boolean('archived')->default(0)->nullable();
             $table->timestamps();
 
+            // Foreign key constraints
+            // $table->foreign('city_id')->references('id')->on('cities')->onUpdate('no action')->onDelete('no action');
+            $table->foreign('vendor_id')->references('id')->on('vendors_info')->onUpdate('no action')->onDelete('no action');
+            $table->foreign('unit_id')->references('id')->on('units')->onUpdate('no action')->onDelete('no action');
+
             // Add indexes for better query performance
-            $table->index(['city', 'unit_name']);
-            $table->index('vendor_name');
+            // $table->index('city_id');
+            $table->index('vendor_id');
+            $table->index('unit_id');
             $table->index('task_submission_date');
+            $table->index('status');
             $table->index('urgent');
         });
     }

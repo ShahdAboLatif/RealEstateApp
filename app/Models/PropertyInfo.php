@@ -1,85 +1,55 @@
 <?php
-// app/Models/PropertyInfo.php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Carbon\Carbon;
 
 class PropertyInfo extends Model
 {
     use HasFactory;
 
-    protected $table = 'properties_info';
-    protected $appends = ['formatted_amount'];
+    protected $table = 'properties';
+
     protected $fillable = [
-        'property_name',
-        'insurance_company_name',
-        'amount',
-        'policy_number',
-        'effective_date',
-        'expiration_date',
-        'status'
+        'city_id',
+        'name',
     ];
 
-    // Remove the date casting to prevent timezone conversion
-    protected $casts = [
-        'amount' => 'decimal:2'
-
-    ];
-
-    // Add custom accessors to handle dates properly
-    public function getEffectiveDateAttribute($value)
+    // Relationships
+    public function city()
     {
-        return $value ? Carbon::parse($value)->format('Y-m-d') : null;
+        return $this->belongsTo(Cities::class, 'city_id');
     }
 
-    public function getExpirationDateAttribute($value)
+    public function units()
     {
-        return $value ? Carbon::parse($value)->format('Y-m-d') : null;
+        return $this->hasMany(Unit::class, 'property_id');
     }
 
-    // Update mutators to store dates correctly
-    public function setEffectiveDateAttribute($value)
+    public function propertyInsurances()
     {
-        $this->attributes['effective_date'] = $value ? Carbon::parse($value)->format('Y-m-d') : null;
+        return $this->hasOne(PropertyInsurance::class, 'property_id');
     }
 
-    public function setExpirationDateAttribute($value)
+    // Calculated properties
+    public function getTotalUnitsAttribute(): int
     {
-        $this->attributes['expiration_date'] = $value ? Carbon::parse($value)->format('Y-m-d') : null;
+        return $this->units()->count();
     }
 
-    // Rest of your methods remain the same...
-    public function getFormattedAmountAttribute(): string
+    public function getVacantUnitsAttribute(): int
     {
-        if (is_null($this->amount)) {
-            return '$0.00';
-        }
-        return '$' . number_format((float) $this->amount, 2);
+        return $this->units()->where('vacant', true)->count();
     }
 
-    public function getIsExpiredAttribute(): bool
+    public function getOccupiedUnitsAttribute(): int
     {
-        $today = Carbon::now()->startOfDay();
-        $expirationDate = Carbon::parse($this->attributes['expiration_date'])->startOfDay();
-
-        // Expired when expiration date is today or in the past
-        return $today->gte($expirationDate);
+        return $this->units()->where('vacant', false)->count();
     }
 
-    public function getDaysLeftAttribute(): int
+    public function getListedUnitsAttribute(): int
     {
-        $today = Carbon::now()->startOfDay();
-        $expirationDate = Carbon::parse($this->attributes['expiration_date'])->startOfDay();
-
-        return $today->diffInDays($expirationDate, false);
-    }
-
-    public function updateStatus(): void
-    {
-        $this->status = $this->is_expired ? 'Expired' : 'Active';
-        $this->save();
+        return $this->units()->where('listed', true)->count();
     }
 }

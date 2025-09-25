@@ -13,17 +13,27 @@ class VendorInfo extends Model
     protected $table = 'vendors_info';
 
     protected $fillable = [
-        'city',
+        'city_id',
         'vendor_name',
         'number',
         'email',
-        'service_type'
+        'service_type',
+        'archived',
     ];
 
-    // Scope for filtering by city
-    public function scopeByCity($query, $city)
+    protected $casts = [
+        'archived' => 'boolean',
+    ];
+
+    // Relationships
+    public function city()
     {
-        return $city ? $query->where('city', 'like', '%' . $city . '%') : $query;
+        return $this->belongsTo(Cities::class, 'city_id');
+    }
+
+    public function vendorTasks()
+    {
+        return $this->hasMany(VendorTaskTracker::class, 'vendor_id');
     }
 
     // Scope for filtering by vendor name
@@ -32,15 +42,15 @@ class VendorInfo extends Model
         return $vendorName ? $query->where('vendor_name', 'like', '%' . $vendorName . '%') : $query;
     }
 
-    // Get vendors by city
-    public function scopeInCity($query, $city)
+    // Scope for filtering by service type
+    public function scopeByServiceType($query, $serviceType)
     {
-        return $query->where('city', $city);
+        return $serviceType ? $query->where('service_type', $serviceType) : $query;
     }
 
     // Accessor for formatted display name
     public function getDisplayNameAttribute(): string
     {
-        return $this->vendor_name . ' (' . $this->city . ')';
+        return $this->vendor_name . ' (' . $this->city->name . ')';
     }
 }

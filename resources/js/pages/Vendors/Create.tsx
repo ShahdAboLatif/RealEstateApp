@@ -141,14 +141,14 @@ export default function Create({ auth, cities }: CreatePageProps) {
                                                 <SelectValue  />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="Maintenance">Maintenance</SelectItem>
-                                                <SelectItem value="Appliances">Appliances</SelectItem>
-                                                <SelectItem value="Pest control">Pest control</SelectItem>
-                                                <SelectItem value="HVAC Repairs">HVAC Repairs</SelectItem>
-                                                <SelectItem value="Plumping">Plumping</SelectItem>
-                                                <SelectItem value="Landscaping">Landscaping</SelectItem>
-                                                <SelectItem value="Lock Smith">Lock Smith</SelectItem>
-                                                <SelectItem value="Garage door">Garage door</SelectItem>
+                                                <SelectItem value="Maintenance">    Maintenance </SelectItem>
+                                                <SelectItem value="Appliances">     Appliances  </SelectItem>
+                                                <SelectItem value="Pest control">   Pest control</SelectItem>
+                                                <SelectItem value="HVAC Repairs">   HVAC Repairs</SelectItem>
+                                                <SelectItem value="Plumping">       Plumping    </SelectItem>
+                                                <SelectItem value="Landscaping">    Landscaping </SelectItem>
+                                                <SelectItem value="Lock Smith">     Lock Smith  </SelectItem>
+                                            <SelectItem value="Garage door">        Garage door </SelectItem>
                                             </SelectContent>
                                         </Select>
                                         {errors.service_type && (

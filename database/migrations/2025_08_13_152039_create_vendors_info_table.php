@@ -1,5 +1,4 @@
 <?php
-// database/migrations/xxxx_xx_xx_create_vendors_info_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -11,12 +10,21 @@ return new class extends Migration
     {
         Schema::create('vendors_info', function (Blueprint $table) {
             $table->id();
-            $table->string('city'); // Not nullable
-            $table->string('vendor_name'); // Not nullable
-            $table->string('number')->nullable();
-            $table->string('email')->nullable();
-            $table->string('service_type')->nullable();
+            $table->unsignedBigInteger('city_id');
+            $table->string('vendor_name', 100);
+            $table->string('number', 20)->nullable();
+            $table->string('email', 100)->nullable();
+            $table->string('service_type', 50)->nullable();
+            $table->boolean('archived')->default(0)->nullable();
             $table->timestamps();
+
+            // Foreign key constraint
+            $table->foreign('city_id')->references('id')->on('cities')->onUpdate('no action')->onDelete('no action');
+
+            // Add indexes for better query performance
+            $table->index('city_id');
+            $table->index('vendor_name');
+            $table->index('service_type');
         });
     }
 

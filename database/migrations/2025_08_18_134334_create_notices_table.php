@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('notices', function (Blueprint $table) {
             $table->id();
-            $table->string('notice_name');
+            $table->string('name', 50);
             $table->integer('days');
             $table->timestamps();
         });

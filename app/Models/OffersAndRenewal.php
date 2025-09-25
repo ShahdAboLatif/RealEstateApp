@@ -6,98 +6,89 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
-/**
- * @property Carbon|null $date_sent_offer
- * @property Carbon|null $date_sent_lease
- * @property Carbon|null $date_offer_expires
- * @property Carbon|null $date_lease_expires
- */
 class OffersAndRenewal extends Model
 {
     use HasFactory;
 
     protected $table = 'offers_and_renewals';
+    protected $appends = ['offer_status', 'renewal_status'];
 
     protected $fillable = [
-        'property','unit','tenant','date_sent_offer','status','date_of_acceptance',
-        'last_notice_sent','notice_kind','lease_sent','date_sent_lease',
-        'lease_signed','date_signed','last_notice_sent_2','notice_kind_2',
-        'notes','how_many_days_left','expired','date_offer_expires','date_lease_expires',
+        'unit_id',
+        'date_sent_offer',
+        'date_offer_expires',
+        'status',
+        'date_of_acceptance',
+        'last_notice_sent',
+        'how_many_days_left_offer',
+        'notice_kind',
+        'lease_sent',
+        'date_sent_lease',
+        'date_lease_expires',
+        'lease_signed',
+        'date_signed',
+        'last_notice_sent_2',
+        'notice_kind_2',
+        'notes',
+        'how_many_days_left_renewal',
+        'expired',
+        'archived',
     ];
 
     protected $casts = [
-        // use 'datetime' if you need time; 'date' is ok too (both return Carbon)
-        'date_sent_offer'   => 'datetime',
-        'date_of_acceptance'=> 'datetime',
-        'last_notice_sent'  => 'datetime',
-        'date_sent_lease'   => 'datetime',
-        'date_signed'       => 'datetime',
-        'last_notice_sent_2'=> 'datetime',
-        'date_offer_expires'=> 'datetime',
-        'date_lease_expires'=> 'datetime',
-        'how_many_days_left'=> 'integer',
+        'date_sent_offer' => 'date',
+        'date_offer_expires' => 'date',
+        'date_of_acceptance' => 'date',
+        'last_notice_sent' => 'date',
+        'date_sent_lease' => 'date',
+        'date_lease_expires' => 'date',
+        'date_signed' => 'date',
+        'last_notice_sent_2' => 'date',
+        'how_many_days_left' => 'integer',
+        'archived' => 'boolean',
     ];
 
-    public function calculateExpiry(): void
+    // Relationships
+    public function unit()
     {
-        $now = now();
+        return $this->belongsTo(Unit::class);
+    }
 
-        if ($this->how_many_days_left !== null) {
-            if ($this->status !== 'Accepted') {
-                $this->date_offer_expires = $this->date_sent_offer
-                    ? $this->date_sent_offer->clone()->addDays($this->how_many_days_left)
-                    : null;
-                if ($this->date_offer_expires && $this->date_offer_expires->lte($now)) {
-                    $this->expired = 'expired';
-                } else {
-                    $this->expired = 'active';
-                }
-                $this->date_lease_expires = null;
-            } else {
-                $this->date_lease_expires = $this->date_sent_lease
-                    ? $this->date_sent_lease->clone()->addDays($this->how_many_days_left)
-                    : null;
-                if ($this->date_lease_expires && $this->date_lease_expires->lte($now)) {
-                    $this->expired = 'expired';
-                } else {
-                    $this->expired = 'active';
-                }
-                $this->date_offer_expires = null;
-            }
-            return;
+    /**
+     * Calculate offer status based on status and expiration date
+     */
+    public function getOfferStatusAttribute(): string
+    {
+        if ($this->status === 'accepted') {
+            return 'done';
         }
 
-        // If no manual days left, calculate how_many_days_left and expiration from date_sent_lease
-        if ($this->date_sent_lease) {
-            $diff = $this->date_sent_lease->diffInDays($now, false);
-            $this->how_many_days_left = max(0, 30 - $diff);
+        if ($this->date_sent_offer && $this->how_many_days_left_offer) {
+            $expirationDate = Carbon::parse($this->date_sent_offer)->addDays($this->how_many_days_left_offer);
+            $today = Carbon::now()->startOfDay();
 
-            if ($this->status !== 'Accepted') {
-                $this->date_offer_expires = $this->date_sent_offer
-                    ? $this->date_sent_offer->clone()->addDays($this->how_many_days_left)
-                    : null;
-                if ($this->date_offer_expires && $this->date_offer_expires->lte($now)) {
-                    $this->expired = 'expired';
-                } else {
-                    $this->expired = 'active';
-                }
-                $this->date_lease_expires = null;
-            } else {
-                $this->date_lease_expires = $this->date_sent_lease
-                    ? $this->date_sent_lease->clone()->addDays($this->how_many_days_left)
-                    : null;
-                if ($this->date_lease_expires && $this->date_lease_expires->lte($now)) {
-                    $this->expired = 'expired';
-                } else {
-                    $this->expired = 'active';
-                }
-                $this->date_offer_expires = null;
-            }
-        } else {
-            $this->how_many_days_left = null;
-            $this->date_offer_expires = null;
-            $this->date_lease_expires = null;
-            $this->expired = null;
+            return $today->gte($expirationDate) ? 'expired' : 'active';
         }
+
+        return 'active';
+    }
+
+    /**
+     * Calculate renewal status based on status and lease expiration date
+     */
+    public function getRenewalStatusAttribute(): string
+    {
+        if ($this->status === 'accepted') {
+            if ($this->date_sent_lease && $this->how_many_days_left_renewal) {
+            $expirationDate = Carbon::parse($this->date_sent_lease)->addDays($this->how_many_days_left_renewal);
+            $today = Carbon::now()->startOfDay();
+
+            return $today->gte($expirationDate) ? 'expired' : 'active';
+        }
+        return 'active';
+        }
+
+        return null;
+
     }
 }

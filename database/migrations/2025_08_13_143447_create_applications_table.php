@@ -1,5 +1,4 @@
 <?php
-// database/migrations/xxxx_xx_xx_create_applications_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -11,18 +10,25 @@ return new class extends Migration
     {
         Schema::create('applications', function (Blueprint $table) {
             $table->id();
-            $table->string( 'city');
-            $table->string('property');
-            $table->string('name');
-            $table->string('co_signer');
-            $table->string('unit');
-            $table->string('status')->nullable();
+            $table->unsignedBigInteger('unit_id');
+            $table->string('name', 100)->nullable();
+            $table->string('co_signer', 100)->nullable();
+            $table->enum('status', ['undecieded', 'approved', 'rejected', 'in_review'])->nullable();
             $table->date('date')->nullable();
-            $table->string('stage_in_progress')->nullable();
+            $table->string('stage_in_progress', 100)->nullable();
             $table->text('notes')->nullable();
-            $table->string('attachment_name')->nullable();
-            $table->string('attachment_path')->nullable();
+            $table->string('attachment_name', 255)->nullable();
+            $table->string('attachment_path', 500)->nullable();
+            $table->boolean('archived')->default(0)->nullable();
             $table->timestamps();
+
+            // Foreign key constraint
+            $table->foreign('unit_id')->references('id')->on('units')->onUpdate('no action')->onDelete('no action');
+
+            // Add indexes for better query performance
+            $table->index('unit_id');
+            $table->index('status');
+            $table->index('date');
         });
     }
 

@@ -10,8 +10,7 @@ class Tenant extends Model
     use HasFactory;
 
     protected $fillable = [
-        'property_name',
-        'unit_number',
+        'unit_id',
         'first_name',
         'last_name',
         'street_address_line',
@@ -25,9 +24,26 @@ class Tenant extends Model
         'has_assistance',
         'assistance_amount',
         'assistance_company',
+        'archived',
     ];
 
     protected $casts = [
         'assistance_amount' => 'decimal:2',
+        'has_insurance' => 'boolean',
+        'sensitive_communication' => 'boolean',
+        'has_assistance' => 'boolean',
+        'archived' => 'boolean',
     ];
+
+    // Relationships
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
+    // Accessor for full name
+    public function getFullNameAttribute(): string
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
 }

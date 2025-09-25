@@ -10,22 +10,28 @@ class PaymentPlan extends Model
     use HasFactory;
 
     protected $fillable = [
-        'property',
-        'unit',
-        'tenant',
+        'unit_id',
         'amount',
         'dates',
         'paid',
-        'notes'
+        'notes',
+        'archived',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'paid' => 'decimal:2',
-        'dates' => 'date'
+        'dates' => 'date',
+        'archived' => 'boolean',
     ];
 
     protected $appends = ['left_to_pay', 'status'];
+
+    // Relationships
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
 
     public function getLeftToPayAttribute()
     {
@@ -37,13 +43,13 @@ class PaymentPlan extends Model
         $leftToPay = $this->left_to_pay;
 
         if ($leftToPay == 0) {
-            return 'Paid';
+            return 'paid';
         } elseif ($leftToPay == $this->amount) {
-            return "Didn't Pay";
+            return 'not paid';
         } elseif ($leftToPay > 0 && $leftToPay < $this->amount) {
-            return "Paid Partly";
-        }else{
-            return "N/A";
+            return 'paid partly';
+        } else {
+            return 'N/A';
         }
     }
 }

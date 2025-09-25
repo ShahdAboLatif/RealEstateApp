@@ -7,36 +7,42 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
 
-/**
- * @property \Illuminate\Support\Carbon|null $date
- * @property-read string|null $formatted_date
- */
 class Application extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'city',
-        'property',
+        'unit_id',
         'name',
         'co_signer',
-        'unit',
         'status',
         'date',
         'stage_in_progress',
         'notes',
         'attachment_name',
         'attachment_path',
+        'archived',
     ];
 
     protected $casts = [
         'date' => 'date',
+        'archived' => 'boolean',
     ];
+
+    // Relationships
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
 
     // Accessor for formatted date
     public function getFormattedDateAttribute(): ?string
     {
-        return $this->date ? $this->date->format('M d, Y') : null;
+        if ($this->date instanceof Carbon) {
+            return $this->date->format('M d, Y');
+        }
+
+        return null;
     }
 
     // Scope for filtering by status
@@ -51,55 +57,21 @@ class Application extends Model
         return $stage ? $query->where('stage_in_progress', $stage) : $query;
     }
 
-    // Get applications by date range
-    public function scopeDateRange($query, $startDate = null, $endDate = null)
+    // Scope for filtering by unit
+    public function scopeByUnit($query, $unitId)
     {
-        if ($startDate) {
-            $query->where('date', '>=', $startDate);
-        }
-        if ($endDate) {
-            $query->where('date', '<=', $endDate);
-        }
-        return $query;
+        return $unitId ? $query->where('unit_id', $unitId) : $query;
     }
 
-    protected static function boot()
-{
-    parent::boot();
-
-    static::created(function ($application) {
-        Unit::updateApplicationCountForUnit($application->unit);
-    });
-
-    static::updated(function ($application) {
-        Unit::updateApplicationCountForUnit($application->unit);
-
-        // If unit name changed, update both old and new units
-        if ($application->isDirty('unit')) {
-            $originalUnit = $application->getOriginal('unit');
-            if ($originalUnit) {
-                Unit::updateApplicationCountForUnit($originalUnit);
-            }
-        }
-    });
-
-    static::deleted(function ($application) {
-        Unit::updateApplicationCountForUnit($application->unit);
-    });
-    }
-
-    // Helper method to get the full attachment URL
-    public function getAttachmentUrlAttribute()
+    // Get status color for UI
+    public function getStatusColorAttribute(): string
     {
-        if ($this->attachment_path) {
-            return asset('storage/' . $this->attachment_path);
-        }
-        return null;
-    }
-
-    // Helper method to check if attachment exists
-    public function hasAttachment(): bool
-    {
-        return !empty($this->attachment_path) && !empty($this->attachment_name);
+        return match($this->status) {
+            'approved' => 'green',
+            'rejected' => 'red',
+            'in_review' => 'yellow',
+            'pending' => 'blue',
+            default => 'gray'
+        };
     }
 }

@@ -10,20 +10,30 @@ return new class extends Migration
     {
         Schema::create('notice_and_evictions', function (Blueprint $table) {
             $table->id();
-            $table->string('unit_name');
-            $table->string('tenants_name');
-            $table->string('status')->nullable();
-            $table->date('date')->nullable();
-            $table->string('type_of_notice')->nullable();
-            $table->string('have_an_exception')->nullable();
+            $table->unsignedBigInteger('unit_id');
+            $table->unsignedBigInteger('notice_id');
+            $table->enum('status', ['pending', 'served', 'resolved', 'evicted']);
+            $table->date('date');
+            $table->boolean('have_an_exception')->nullable();
             $table->text('note')->nullable();
-            $table->string('evictions')->nullable();
-            $table->string('sent_to_atorney')->nullable();
+            // $table->enum('evictions', ['alert', 'has an exception'])->nullable();
+            $table->enum('sent_to_attorney', ['yes', 'no'])->nullable();
             $table->date('hearing_dates')->nullable();
-            $table->string('evected_or_payment_plan')->nullable();
-            $table->string('if_left')->nullable();
+            $table->enum('evicted_or_payment_plan', ['evicted', 'payment plan', 'resolved'])->nullable();
+            $table->enum('if_left', ['yes', 'no'])->nullable();
             $table->date('writ_date')->nullable();
+            $table->boolean('archived')->default(0)->nullable();
             $table->timestamps();
+
+            // Foreign key constraints
+            $table->foreign('unit_id')->references('id')->on('units')->onUpdate('no action')->onDelete('no action');
+            $table->foreign('notice_id')->references('id')->on('notices')->onUpdate('no action')->onDelete('no action');
+
+            // Add indexes for better query performance
+            $table->index('unit_id');
+            $table->index('notice_id');
+            $table->index('status');
+            $table->index('date');
         });
     }
 

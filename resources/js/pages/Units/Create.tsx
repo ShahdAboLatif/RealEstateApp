@@ -2,25 +2,19 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { usePermissions } from '@/hooks/usePermissions';
 import AppLayout from '@/Layouts/app-layout';
 import { PageProps, UnitFormData } from '@/types/unit';
 import { Head, Link, useForm } from '@inertiajs/react';
 import React from 'react';
-import { type BreadcrumbItem } from '@/types';import { usePermissions } from '@/hooks/usePermissions';
 
 interface CreatePageProps extends PageProps {
     cities: Array<{ id: number; city: string }>;
 }
 
 export default function Create({ auth, cities }: CreatePageProps) {
-    const { hasPermission, hasAnyPermission, hasAllPermissions} = usePermissions();
+    const { hasPermission, hasAnyPermission, hasAllPermissions } = usePermissions();
     const { data, setData, post, processing, errors } = useForm<UnitFormData>({
         city: '',
         property: '',
@@ -45,7 +39,7 @@ export default function Create({ auth, cities }: CreatePageProps) {
     };
 
     return (
-        <AppLayout >
+        <AppLayout>
             <Head title="Create Unit" />
             <div className="py-12">
                 <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
@@ -57,12 +51,11 @@ export default function Create({ auth, cities }: CreatePageProps) {
                                     <Link href={route('units.index')}>
                                         <Button variant="outline">Back to List</Button>
                                     </Link>
-                                    {hasPermission('cities.index')&&(
-                                    <Link  href={route('cities.index')}
-                                    >
-                                        <Button variant="outline">View Cities</Button>
-                                    </Link>
-                                )}
+                                    {hasPermission('cities.index') && (
+                                        <Link href={route('cities.index')}>
+                                            <Button variant="outline">View Cities</Button>
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
                         </CardHeader>
@@ -72,10 +65,7 @@ export default function Create({ auth, cities }: CreatePageProps) {
                                     {/* City */}
                                     <div>
                                         <Label htmlFor="city">City *</Label>
-                                        <Select
-                                            onValueChange={(value) => setData('city', value)}
-                                            value={data.city}
-                                        >
+                                        <Select onValueChange={(value) => setData('city', value)} value={data.city}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select a city" />
                                             </SelectTrigger>
@@ -165,6 +155,7 @@ export default function Create({ auth, cities }: CreatePageProps) {
                                             id="count_beds"
                                             type="number"
                                             min="0"
+                                            step="0.1"
                                             value={data.count_beds}
                                             onChange={(e) => setData('count_beds', e.target.value)}
                                             error={errors.count_beds}
@@ -179,6 +170,7 @@ export default function Create({ auth, cities }: CreatePageProps) {
                                             id="count_baths"
                                             type="number"
                                             min="0"
+                                            step="0.1"
                                             value={data.count_baths}
                                             onChange={(e) => setData('count_baths', e.target.value)}
                                             error={errors.count_baths}
@@ -191,10 +183,7 @@ export default function Create({ auth, cities }: CreatePageProps) {
                                     {/* Lease Status */}
                                     <div>
                                         <Label htmlFor="lease_status">Lease Status</Label>
-                                        <Select
-                                            onValueChange={(value) => setData('lease_status', value)}
-                                            value={data.lease_status}
-                                        >
+                                        <Select onValueChange={(value) => setData('lease_status', value)} value={data.lease_status}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select lease status" />
                                             </SelectTrigger>
@@ -265,10 +254,7 @@ export default function Create({ auth, cities }: CreatePageProps) {
                                     {/* Insurance */}
                                     <div>
                                         <Label htmlFor="insurance">Insurance</Label>
-                                        <Select
-                                            onValueChange={(value) => setData('insurance', value)}
-                                            value={data.insurance}
-                                        >
+                                        <Select onValueChange={(value) => setData('insurance', value)} value={data.insurance}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select insurance status" />
                                             </SelectTrigger>

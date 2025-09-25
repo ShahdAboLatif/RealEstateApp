@@ -9,65 +9,61 @@ class Payment extends Model
 {
     use HasFactory;
 
+    // These will be appended to JSON responses
+    protected $appends = ['left_to_pay', 'status'];
+
     protected $fillable = [
+        'unit_id',
         'date',
-        'city',
-        'unit_name',
         'owes',
         'paid',
-        'left_to_pay',
-        'status',
         'notes',
         'reversed_payments',
         'permanent',
+        'archived',
     ];
 
     protected $casts = [
         'date' => 'date',
         'owes' => 'decimal:2',
         'paid' => 'decimal:2',
-        'left_to_pay' => 'decimal:2',
+        'archived' => 'boolean',
     ];
 
-    // Automatically calculate left_to_pay when owes or paid changes
-    protected static function boot()
+    // Relationships
+    public function unit()
     {
-        parent::boot();
+        return $this->belongsTo(Unit::class);
+    }
 
-        static::saving(function ($payment) {
-            if ($payment->paid !== null) {
-                $payment->left_to_pay = $payment->owes - $payment->paid;
-            }
-        });
+    /**
+     * Calculate left_to_pay based on owes and paid values
+     */
+    public function getLeftToPayAttribute(): float
+    {
+        $owes = (float) ($this->owes ?? 0);
+        $paid = (float) ($this->paid ?? 0);
+
+        return max(0, $owes - $paid); // Ensure non-negative value
     }
 
     /**
      * Calculate status based on left_to_pay and owes values
      */
-    public function calculateStatus(): string
+    public function getStatusAttribute(): string
     {
-        $leftToPay = (float) $this->left_to_pay;
-        $owes = (float) $this->owes;
+        $leftToPay = $this->left_to_pay;
+        $owes = (float) ($this->owes ?? 0);
 
-        if ($leftToPay == 0) {
-            return 'Paid';
+        if ($owes == 0) {
+            return 'pending'; // No amount owed
+        } elseif ($leftToPay == 0) {
+            return 'paid';
         } elseif ($leftToPay == $owes) {
-            return 'Didn\'t Pay';
-        } elseif ($leftToPay > 0 && $leftToPay < $owes) {
-            return 'Paid Partly';
+            return 'not paid'; // Changed from 'not paid' to match your enum values
+        } else {
+            return 'paid partly';
         }
-
-        // Default fallback
-        return 'Didn\'t Pay';
-    }
-
-    /**
-     * Update status based on current left_to_pay value
-     */
-    public function updateStatus(): void
-    {
-        $this->status = $this->calculateStatus();
-        $this->save();
     }
 
     /**
@@ -91,6 +87,6 @@ class Payment extends Model
      */
     public function getFormattedLeftToPayAttribute(): string
     {
-        return '$' . number_format((float) ($this->left_to_pay ?? 0), 2);
+        return '$' . number_format($this->left_to_pay, 2);
     }
 }

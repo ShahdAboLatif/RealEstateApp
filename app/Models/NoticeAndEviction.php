@@ -5,53 +5,59 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Notice;
-
+use Illuminate\Support\Carbon;
 class NoticeAndEviction extends Model
 {
     use HasFactory;
 
     protected $table = 'notice_and_evictions';
 
+    protected $appends = ['evictions'];
+
     protected $fillable = [
-        'unit_name',
-        'tenants_name',
+        'unit_id',
+        'notice_id',
         'status',
         'date',
-        'type_of_notice',
         'have_an_exception',
         'note',
-        'evictions',
-        'sent_to_atorney',
+
+        'sent_to_attorney',
         'hearing_dates',
-        'evected_or_payment_plan',
+        'evicted_or_payment_plan',
         'if_left',
-        'writ_date'
+        'writ_date',
+        'archived',
     ];
 
     protected $casts = [
         'date' => 'date',
         'hearing_dates' => 'date',
         'writ_date' => 'date',
+        'archived' => 'boolean',
     ];
 
-    // Calculated column for 'evictions'
-    public function calculateEvictions()
+    // Relationships
+    public function unit()
     {
-        if ($this->have_an_exception === 'Yes') {
-            $this->evictions = 'Have An Exception';
-            return;
+        return $this->belongsTo(Unit::class);
+    }
+
+    public function notice()
+    {
+        return $this->belongsTo(Notice::class);
+    }
+
+    public function getEvictionsAttribute(){
+        if($this->have_an_exception ){
+            return 'has an exception';
         }
-        if ($this->type_of_notice && $this->date) {
-            $notice = Notice::where('notice_name', $this->type_of_notice)->first();
-            if ($notice) {
-                $days = $notice->days;
-                $evictionDay = $this->date->copy()->addDays($days);
-                if ($evictionDay->lessThanOrEqualTo(now())) {
-                    $this->evictions = 'Alert';
-                } else {
-                    $this->evictions = '';
-                }
-            }
+        else{
+            $daysLeft= $this->notice()->value('days') ?? 0;
+            $expirationDate = Carbon::parse($this->date)->addDays($daysLeft);
+            $today = Carbon::now()->startOfDay();
+            return $today->gte($expirationDate) ? 'evicted' : '-';
         }
+
     }
 }

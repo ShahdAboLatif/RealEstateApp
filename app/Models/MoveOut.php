@@ -12,8 +12,7 @@ class MoveOut extends Model
     protected $table = 'move_outs';
 
     protected $fillable = [
-        'tenants_name',
-        'units_name',
+        'unit_id',
         'move_out_date',
         'lease_status',
         'date_lease_ending_on_buildium',
@@ -27,17 +26,26 @@ class MoveOut extends Model
         'cleaning',
         'list_the_unit',
         'move_out_form',
+        'archived',
     ];
 
     protected $casts = [
         'move_out_date' => 'date',
         'date_lease_ending_on_buildium' => 'date',
         'date_utility_put_under_our_name' => 'date',
+        'utilities_under_our_name' => 'boolean',
+        'walkthrough' => 'boolean',
+        'repairs' => 'boolean',
+        'send_back_security_deposit' => 'boolean',
+        'cleaning' => 'boolean',
+        'list_the_unit' => 'boolean',
+        'move_out_form' => 'boolean',
+        'archived' => 'boolean',
     ];
 
-    // Relationship with Tenant
-    public function tenant()
+    // Relationship with Unit
+    public function unit()
     {
-        return $this->belongsTo(Tenant::class, 'tenants_name', 'full_name');
+        return $this->belongsTo(Unit::class);
     }
 }

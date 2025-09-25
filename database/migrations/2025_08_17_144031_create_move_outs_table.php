@@ -10,26 +10,28 @@ return new class extends Migration
     {
         Schema::create('move_outs', function (Blueprint $table) {
             $table->id();
-            $table->string('tenants_name');
-            $table->string('units_name');
-            $table->date('move_out_date')->nullable();
-            $table->string('lease_status')->nullable();
+            $table->unsignedBigInteger('unit_id');
+            $table->date('move_out_date');
+            $table->enum('lease_status', ['ended', 'active']);
             $table->date('date_lease_ending_on_buildium')->nullable();
-            $table->string('keys_location')->nullable();
-            $table->enum('utilities_under_our_name', ['Yes', 'No'])->nullable();
+            $table->text('keys_location')->nullable();
+            $table->string('utilities_under_our_name')->nullable();
             $table->date('date_utility_put_under_our_name')->nullable();
             $table->text('walkthrough')->nullable();
             $table->text('repairs')->nullable();
-            $table->string('send_back_security_deposit')->nullable();
+            $table->enum('send_back_security_deposit', ['yes', 'no', 'partly'])->nullable();
             $table->text('notes')->nullable();
             $table->enum('cleaning', ['cleaned', 'uncleaned'])->nullable();
-            $table->string('list_the_unit')->nullable();
+            $table->boolean('list_the_unit')->nullable();
             $table->enum('move_out_form', ['filled', 'not filled'])->nullable();
+            $table->boolean('archived')->default(0)->nullable();
             $table->timestamps();
 
+            // Foreign key constraint
+            $table->foreign('unit_id')->references('id')->on('units')->onUpdate('no action')->onDelete('no action');
+
             // Add indexes for better query performance
-            $table->index('tenants_name');
-            $table->index('units_name');
+            $table->index('unit_id');
             $table->index('move_out_date');
             $table->index('lease_status');
         });

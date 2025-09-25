@@ -9,22 +9,22 @@ return new class extends Migration {
     {
         Schema::create('tenants', function (Blueprint $table) {
             $table->id();
-            $table->string('property_name');
-            $table->string('unit_number');
+            $table->unsignedBigInteger('unit_id');
             $table->string('first_name');
             $table->string('last_name');
-            $table->string('street_address_line')->nullable();
             $table->string('login_email')->nullable();
             $table->string('alternate_email')->nullable();
             $table->string('mobile')->nullable();
             $table->string('emergency_phone')->nullable();
-            $table->enum('cash_or_check', ['Cash', 'Check'])->nullable();
-            $table->enum('has_insurance', ['Yes', 'No'])->nullable();
-            $table->enum('sensitive_communication', ['Yes', 'No'])->nullable();
-            $table->enum('has_assistance', ['Yes', 'No'])->nullable();
-            $table->decimal('assistance_amount', 8, 2)->nullable();
-            $table->string('assistance_company')->nullable();
+            $table->boolean('sensitive_communication')->nullable();
+            $table->boolean('archived')->default(0)->nullable();
             $table->timestamps();
+
+            // Foreign key constraint
+            $table->foreign('unit_id')->references('id')->on('units')->onUpdate('no action')->onDelete('no action');
+
+            // Add indexes for better query performance
+            $table->index('unit_id');
         });
     }
 

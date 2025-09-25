@@ -12,11 +12,17 @@ class Notice extends Model
     protected $table = 'notices';
 
     protected $fillable = [
-        'notice_name',
+        'name',
         'days',
     ];
 
     protected $casts = [
         'days' => 'integer',
     ];
+
+    // Relationships
+    public function noticeAndEvictions()
+    {
+        return $this->hasMany(NoticeAndEviction::class);
+    }
 }

@@ -28,9 +28,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('roles', RoleController::class);
 
-    // Route::get('dashboard', function () {
-    //     return Inertia::render('dashboard');
-    // })->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Additional routes for filtering
